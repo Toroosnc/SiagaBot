@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="dicoding:email" content="neotra01@gmail.com">
+<title>SiagaBot — Asisten Darurat AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand:#E8401C;--brand-dark:#B02E12;--brand-light:#FFF1EE;--brand-mid:#FDDED8;--safe:#0D7A4E;--safe-light:#E6F7F0;--warn:#C47D00;--warn-light:#FFF8E6;--info:#1A5FB4;--info-light:#EBF3FD;--bg:#FAFAF9;--surface:#FFFFFF;--surface2:#F5F4F2;--border:rgba(0,0,0,0.09);--text:#1A1A18;--text2:#5C5C58;--text3:#9A9A94;--radius:16px;--radius-sm:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--brand);color:#fff;padding:0 16px;height:56px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(232,64,28,.25);}
+.topbar-logo{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.topbar-title{font-weight:800;font-size:18px;letter-spacing:-.3px;}
+.topbar-sub{font-size:11px;opacity:.8;margin-top:1px;}
+.topbar-status{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:12px;opacity:.9;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#7FE4A0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(1.3);}}
+.realtime-banner{background:var(--warn-light);border-bottom:1px solid rgba(196,125,0,.2);padding:6px 16px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--warn);font-weight:600;}
+.scenarios{padding:12px 16px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;}
+.scenarios::-webkit-scrollbar{display:none;}
+.scenario-btn{flex-shrink:0;background:var(--surface);border:1.5px solid var(--border);border-radius:999px;padding:6px 14px;font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:5px;}
+.scenario-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-light);}
+.scenario-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+.chat-wrap{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+.msg{display:flex;gap:8px;max-width:100%;}
+.msg.user{flex-direction:row-reverse;}
+.avatar{width:32px;height:32px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.avatar.bot{background:var(--brand);}
+.avatar.user-av{background:var(--surface2);border:1.5px solid var(--border);}
+.bubble{max-width:calc(100% - 48px);padding:10px 14px;border-radius:var(--radius);font-size:14px;line-height:1.6;}
+.bubble.bot{background:var(--surface);border:1px solid var(--border);border-top-left-radius:4px;color:var(--text);}
+.bubble.user{background:var(--brand);color:#fff;border-top-right-radius:4px;}
+.bubble strong{font-weight:700;}
+.bubble ul{padding-left:18px;margin:6px 0;}
+.bubble li{margin-bottom:3px;}
+.bubble ol{padding-left:18px;margin:6px 0;}
+.bubble h4{font-size:14px;font-weight:700;margin:10px 0 4px;}
+.bubble h4:first-child{margin-top:0;}
+.alert-card{margin:8px 0;border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;display:flex;gap:8px;align-items:flex-start;}
+.alert-card.danger{background:var(--brand-light);border-left:3px solid var(--brand);color:var(--brand-dark);}
+.alert-card.safe{background:var(--safe-light);border-left:3px solid var(--safe);color:var(--safe);}
+.alert-card.warn{background:var(--warn-light);border-left:3px solid var(--warn);color:var(--warn);}
+.alert-card.info{background:var(--info-light);border-left:3px solid var(--info);color:var(--info);}
+.emergency-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
+.emg-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px;text-align:center;cursor:pointer;font-family:inherit;transition:all .15s;}
+.emg-btn:hover{border-color:var(--brand);background:var(--brand-light);}
+.emg-btn .emg-icon{font-size:22px;display:block;margin-bottom:4px;}
+.emg-btn .emg-label{font-size:12px;font-weight:700;color:var(--text2);}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px;}
+.typing span{width:7px;height:7px;background:var(--brand);border-radius:50%;opacity:.4;animation:bounce 1s ease-in-out infinite;}
+.typing span:nth-child(2){animation-delay:.15s;}
+.typing span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(-5px);opacity:1;}}
+.footer{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;}
+.input-wrap{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;display:flex;align-items:flex-end;padding:8px 12px;gap:6px;transition:border-color .15s;}
+.input-wrap:focus-within{border-color:var(--brand);}
+#userInput{flex:1;background:transparent;border:none;outline:none;font-family:inherit;font-size:14px;color:var(--text);resize:none;max-height:100px;line-height:1.5;}
+#userInput::placeholder{color:var(--text3);}
+.send-btn{width:40px;height:40px;border-radius:12px;background:var(--brand);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s,transform .1s;}
+.send-btn:hover{background:var(--brand-dark);}
+.send-btn:active{transform:scale(.95);}
+.send-btn svg{width:18px;height:18px;fill:#fff;}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.chip{background:var(--brand-light);border:1px solid var(--brand-mid);color:var(--brand-dark);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+.chip:hover{background:var(--brand);color:#fff;}
+.onboard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.onboard-title{font-size:16px;font-weight:800;margin-bottom:6px;}
+.onboard-sub{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;}
+.emg-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+.emg-tbl tr:nth-child(even) td{background:var(--surface2);}
+.emg-tbl td{padding:7px 8px;}
+.disclaimer{text-align:center;font-size:11px;color:var(--text3);padding:4px 16px 2px;background:var(--surface);}
+.powered{font-size:10px;color:var(--text3);text-align:center;padding:2px 16px 8px;background:var(--surface);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+    </svg>
+  </div>
+  <div><div class="topbar-title">SiagaBot</div><div class="topbar-sub">Asisten Darurat Bencana AI</div></div>
+  <div class="topbar-status"><div class="status-dot"></div>Aktif 24/7</div>
+</div>
+
+<div class="realtime-banner">⚠️ Indonesia zona bencana aktif · Panduan berbasis protokol BNPB &amp; Basarnas</div>
+
+<div class="scenarios">
+  <button class="scenario-btn active" onclick="setMode('umum')" id="pill-umum">🆘 Semua Bencana</button>
+  <button class="scenario-btn" onclick="setMode('banjir')" id="pill-banjir">🌊 Banjir</button>
+  <button class="scenario-btn" onclick="setMode('gempa')" id="pill-gempa">🏔️ Gempa</button>
+  <button class="scenario-btn" onclick="setMode('longsor')" id="pill-longsor">⛰️ Longsor</button>
+  <button class="scenario-btn" onclick="setMode('kebakaran')" id="pill-kebakaran">🔥 Kebakaran</button>
+  <button class="scenario-btn" onclick="setMode('tsunami')" id="pill-tsunami">🌏 Tsunami</button>
+</div>
+
+<div class="chat-wrap" id="chatWrap">
+  <div class="msg">
+    <div class="avatar bot">🛡️</div>
+    <div class="bubble bot">
+      <div class="onboard">
+        <div class="onboard-title">Halo! Saya SiagaBot 👋</div>
+        <div class="onboard-sub">Asisten darurat AI untuk bencana alam Indonesia. Saya siap memberi panduan pertolongan pertama, langkah evakuasi, dan informasi keselamatan — gratis, tanpa internet!</div>
+        <div class="alert-card danger">🚨 <span><strong>Darurat ekstrem?</strong> Segera hubungi <strong>BNPB: 117</strong> atau <strong>Basarnas: 115</strong></span></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--text2);font-weight:600;margin-bottom:8px;">Pilih situasi darurat:</div>
+        <div class="emergency-grid">
+          <button class="emg-btn" onclick="ask('banjir')"><span class="emg-icon">🌊</span><span class="emg-label">Banjir</span></button>
+          <button class="emg-btn" onclick="ask('gempa')"><span class="emg-icon">🏔️</span><span class="emg-label">Gempa Bumi</span></button>
+          <button class="emg-btn" onclick="ask('longsor')"><span class="emg-icon">⛰️</span><span class="emg-label">Tanah Longsor</span></button>
+          <button class="emg-btn" onclick="ask('kebakaran')"><span class="emg-icon">🔥</span><span class="emg-label">Kebakaran</span></button>
+        </div>
+        <button class="emg-btn" style="width:100%;margin-top:8px;" onclick="ask('nomor')"><span class="emg-icon">📞</span><span class="emg-label">Nomor Darurat Indonesia</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer">SiagaBot memberikan panduan umum berbasis protokol BNPB/BPBD — bukan pengganti otoritas darurat resmi</div>
+<div class="footer">
+  <div class="input-wrap">
+    <textarea id="userInput" placeholder="Tanya situasi darurat Anda..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+  </div>
+  <button class="send-btn" onclick="send()">
+    <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+  </button>
+</div>
+<div class="powered">SiagaBot · Panduan berbasis protokol BNPB &amp; Basarnas · IDCamp Challenge 2026</div>
+
+<script>
+// ── KNOWLEDGE BASE ──────────────────────────────────────────
+const KB = {
+banjir: `<div class="alert-card danger">🚨 <strong>SEGERA EVAKUASI</strong> jika air terus naik — jangan tunggu!</div>
+<h4>⚡ Tindakan SEKARANG:</h4>
+<ol><li>Matikan listrik dari MCB/sekring utama</li><li>Pindah ke lantai atas atau tempat lebih tinggi</li><li>Bawa: dokumen penting, obat-obatan, air minum, makanan</li><li>Hubungi keluarga, beritahu posisi Anda</li><li>Jangan berjalan/berkendara di arus &gt; lutut</li></ol>
+<h4>⚠️ Bahaya Tersembunyi:</h4>
+<ul><li>Arus deras bisa menyeret meski air dangkal</li><li>Lubang got tidak terlihat saat banjir</li><li>Air banjir mengandung bakteri &amp; limbah berbahaya</li><li>Kabel listrik terendam sangat berbahaya</li></ul>
+<div class="alert-card info">📞 BNPB: <strong>117</strong> · Basarnas: <strong>115</strong> · BPBD setempat</div>
+<div class="chips"><span class="chip" onclick="ask('banjir-evakuasi')">Rute evakuasi aman</span><span class="chip" onclick="ask('banjir-pasca')">Setelah banjir surut</span><span class="chip" onclick="ask('banjir-siap')">Persiapan banjir</span></div>`,
+
+"banjir-evakuasi": `<h4>🏃 Rute Evakuasi Banjir yang Aman</h4>
+<ol><li><strong>Pilih jalur tertinggi</strong> — hindari lembah &amp; jalan dekat sungai</li><li><strong>Berjalan berkelompok</strong> — saling berpegangan jika melewati air</li><li><strong>Gunakan tongkat</strong> untuk mendeteksi lubang/got di depan</li><li><strong>Tuju titik evakuasi resmi:</strong> sekolah, masjid, balai desa, gedung berlantai tinggi</li><li>Ikuti instruksi petugas BPBD &amp; Basarnas</li></ol>
+<div class="alert-card warn">⚠️ Hindari evakuasi malam hari jika tidak terpaksa</div>
+<div class="chips"><span class="chip" onclick="ask('banjir-pasca')">Setelah banjir surut</span><span class="chip" onclick="ask('p3k')">Pertolongan pertama</span></div>`,
+
+"banjir-pasca": `<h4>✅ Yang Dilakukan Setelah Banjir Surut</h4>
+<ol><li><strong>Jangan langsung masuk rumah</strong> — cek struktur dari luar dulu</li><li>Pakai <strong>sepatu bot &amp; sarung tangan</strong></li><li>Buka semua ventilasi — hindari gas terperangkap</li><li><strong>Jangan hidupkan listrik</strong> sebelum dicek teknisi PLN</li><li>Buang makanan &amp; air yang terkena banjir</li><li>Cuci tangan rutin dengan sabun — cegah leptospirosis</li><li>Laporkan kerusakan ke BPBD setempat</li></ol>
+<div class="alert-card info">💊 Waspadai: leptospirosis, diare, ISPA, penyakit kulit pasca banjir</div>
+<div class="chips"><span class="chip" onclick="ask('banjir-siap')">Persiapan banjir berikutnya</span><span class="chip" onclick="ask('nomor')">Kontak bantuan</span></div>`,
+
+"banjir-siap": `<h4>🎒 Persiapan Sebelum Musim Banjir</h4>
+<ul><li>Siapkan <strong>tas siaga</strong>: KTP, obat, senter, powerbank, air 3L, makanan darurat</li><li>Tandai &amp; hafalkan <strong>jalur evakuasi</strong> dan titik kumpul keluarga</li><li>Simpan barang berharga di <strong>tempat tinggi</strong> atau wadah kedap air</li><li>Pantau info cuaca via <strong>BMKG (bmkg.go.id)</strong></li><li>Simpan nomor darurat di HP: BNPB 117, Basarnas 115</li></ul>
+<div class="chips"><span class="chip" onclick="ask('tas')">Isi tas siaga lengkap</span><span class="chip" onclick="ask('nomor')">Nomor darurat</span></div>`,
+
+gempa: `<div class="alert-card danger">🚨 <strong>DROP — COVER — HOLD ON — jangan panik!</strong></div>
+<h4>⚡ Saat gempa terjadi:</h4>
+<ol><li><strong>JATUHKAN diri</strong> ke lantai — jangan berlari</li><li><strong>BERLINDUNG</strong> di bawah meja kokoh / lindungi kepala dengan tangan</li><li><strong>TAHAN</strong> sampai guncangan berhenti</li></ol>
+<h4>🚫 Jangan lakukan:</h4>
+<ul><li>Jangan lari keluar saat gempa masih terjadi</li><li>Jangan gunakan lift</li><li>Jangan berdiri di dekat jendela/kaca</li><li>Jangan nyalakan korek api (risiko gas bocor)</li></ul>
+<h4>✅ Setelah guncangan berhenti:</h4>
+<ol><li>Periksa diri &amp; orang sekitar</li><li>Keluar gedung lewat tangga dengan tenang</li><li>Jauhi gedung, pohon, tiang listrik</li><li>Waspada <strong>gempa susulan (aftershock)</strong></li></ol>
+<div class="alert-card warn">🌊 Gempa kuat di dekat pantai? <strong>SEGERA lari ke dataran tinggi — antisipasi tsunami!</strong></div>
+<div class="alert-card info">📞 BNPB: <strong>117</strong> · BMKG: <strong>021-6546318</strong> · Basarnas: <strong>115</strong></div>
+<div class="chips"><span class="chip" onclick="ask('tsunami')">Waspadai tsunami</span><span class="chip" onclick="ask('gempa-siap')">Persiapan rumah</span><span class="chip" onclick="ask('p3k')">Pertolongan pertama</span></div>`,
+
+"gempa-siap": `<h4>🏠 Persiapan Rumah Hadapi Gempa</h4>
+<ul><li>Amankan lemari &amp; rak tinggi ke dinding (baut/tali)</li><li>Simpan benda berat di rak bawah</li><li>Sediakan <strong>kotak P3K &amp; senter</strong> yang mudah dijangkau</li><li>Tentukan <strong>titik kumpul keluarga</strong> di luar rumah</li><li>Latih teknik <strong>Drop-Cover-Hold On</strong> bersama keluarga</li><li>Simpan dokumen penting dalam plastik kedap air</li><li>Install notif <strong>InfoBMKG</strong> di HP</li></ul>
+<div class="chips"><span class="chip" onclick="ask('tas')">Tas siaga darurat</span><span class="chip" onclick="ask('nomor')">Nomor darurat</span></div>`,
+
+longsor: `<div class="alert-card danger">🚨 Suara gemuruh / tanah retak / air tiba-tiba keruh? <strong>LARI SEKARANG!</strong></div>
+<h4>⚡ Tanda Peringatan Longsor:</h4>
+<ul><li>Tanah atau rumput ambles/retak mendadak</li><li>Air sungai tiba-tiba keruh &amp; berbau tanah</li><li>Suara gemuruh atau dentuman dari bukit</li><li>Pohon &amp; tiang listrik mulai miring</li><li>Pintu/jendela susah dibuka (struktur bergeser)</li></ul>
+<h4>🏃 Langkah Evakuasi:</h4>
+<ol><li><strong>Lari SEGERA</strong> menjauhi arah longsoran — ke kanan/kiri, bukan lurus menuruni bukit</li><li>Naiki bukit/dataran tinggi <strong>di sisi lain</strong> dari longsor</li><li>Jangan kembali untuk mengambil barang</li><li>Hubungi BPBD &amp; informasikan posisi Anda</li></ol>
+<div class="alert-card warn">⚠️ Setelah longsor: jangan masuk area longsor — masih bisa terjadi longsor susulan</div>
+<div class="alert-card info">📞 BNPB: <strong>117</strong> · Basarnas: <strong>115</strong> · BPBD setempat</div>
+<div class="chips"><span class="chip" onclick="ask('longsor-siap')">Kenali zona rawan</span><span class="chip" onclick="ask('p3k')">Pertolongan pertama</span></div>`,
+
+"longsor-siap": `<h4>⛰️ Mengurangi Risiko Tanah Longsor</h4>
+<ul><li>Cek <strong>peta rawan longsor BNPB</strong> di inarisk.bnpb.go.id</li><li>Tanam pohon berakar dalam (bambu, vetiver) di lereng sekitar rumah</li><li>Hindari membangun di lereng terjal &gt;45° atau di bawah tebing</li><li>Jangan menebang pohon di lereng bukit</li><li>Buat <strong>saluran drainase</strong> yang baik di sekitar rumah</li></ul>
+<div class="chips"><span class="chip" onclick="ask('tas')">Tas siaga darurat</span></div>`,
+
+kebakaran: `<div class="alert-card danger">🔥 <strong>RACE: Rescue — Alarm — Confine — Extinguish</strong></div>
+<h4>⚡ Langkah Pertama:</h4>
+<ol><li><strong>RESCUE</strong> — Selamatkan orang terperangkap jika aman</li><li><strong>ALARM</strong> — Teriak "KEBAKARAN!" · Hubungi Damkar <strong>113</strong></li><li><strong>CONFINE</strong> — Tutup semua pintu (jangan dikunci) menahan api</li><li><strong>EXTINGUISH</strong> — Gunakan APAR jika api masih kecil</li></ol>
+<h4>🏃 Evakuasi yang Benar:</h4>
+<ul><li><strong>Merangkak</strong> — udara bersih ada di dekat lantai</li><li>Pegang gagang pintu — jika panas, <strong>jangan dibuka</strong></li><li>Tutup hidung &amp; mulut dengan kain basah</li><li>Gunakan tangga — <strong>JANGAN lift</strong></li><li>Jangan kembali masuk untuk mengambil barang</li></ul>
+<div class="alert-card warn">⚠️ Jika terjebak di ruangan: tutup celah pintu dengan handuk basah, beri tanda di jendela</div>
+<div class="alert-card info">📞 Damkar: <strong>113</strong> · BNPB: <strong>117</strong> · Basarnas: <strong>115</strong></div>
+<div class="chips"><span class="chip" onclick="ask('apar')">Cara pakai APAR</span><span class="chip" onclick="ask('p3k-bakar')">P3K luka bakar</span></div>`,
+
+apar: `<h4>🧯 Cara Menggunakan APAR — Ingat PASS:</h4>
+<ol><li><strong>P</strong>ull — Cabut pin pengaman</li><li><strong>A</strong>im — Arahkan nozzle ke <strong>dasar api</strong>, bukan puncak nyala</li><li><strong>S</strong>queeze — Tekan tuas/handle</li><li><strong>S</strong>weep — Sapukan kiri ke kanan di dasar api</li></ol>
+<div class="alert-card warn">⚠️ APAR hanya untuk api kecil! Api sudah besar? Jangan coba padamkan — EVAKUASI!</div>
+<ul><li>Jarak aman: <strong>1–3 meter</strong> dari sumber api</li><li>Waktu semprot: hanya <strong>8–15 detik</strong></li><li>Posisi: punggung ke pintu keluar</li></ul>
+<div class="chips"><span class="chip" onclick="ask('kebakaran')">Kembali ke panduan kebakaran</span></div>`,
+
+tsunami: `<div class="alert-card danger">🌊 <strong>TSUNAMI — SETIAP DETIK BERHARGA — LARI!</strong></div>
+<h4>⚡ Tanda-tanda Tsunami:</h4>
+<ul><li>Gempa kuat (susah berdiri) di dekat pantai</li><li>Air laut tiba-tiba surut jauh &amp; cepat</li><li>Suara gemuruh keras dari laut</li><li>Sirine tsunami berbunyi</li></ul>
+<div class="alert-card danger">🏃 <strong>JANGAN tunggu konfirmasi — Lari ke dataran tinggi SEKARANG!</strong></div>
+<h4>✅ Langkah Evakuasi:</h4>
+<ol><li>Lari ke dataran tinggi <strong>minimal 30 meter</strong> dari permukaan laut</li><li>Ikuti rambu evakuasi tsunami (papan hijau berlambang orang lari)</li><li>Jika jalan macet — <strong>tinggalkan kendaraan, lari saja</strong></li><li>Jangan kembali ke pantai meski air sudah surut — gelombang bisa berulang</li><li>Tunggu pengumuman resmi BMKG sebelum turun</li></ol>
+<div class="alert-card info">📞 BMKG: <strong>021-6546318</strong> · BNPB: <strong>117</strong> · Basarnas: <strong>115</strong><br>📱 App: <strong>InaWARE / InfoBMKG</strong></div>
+<div class="chips"><span class="chip" onclick="ask('tsunami-siap')">Persiapan di zona tsunami</span><span class="chip" onclick="ask('gempa')">Panduan gempa</span></div>`,
+
+"tsunami-siap": `<h4>🌏 Hidup Aman di Zona Rawan Tsunami</h4>
+<ul><li>Hafalkan <strong>jalur evakuasi</strong> &amp; titik kumpul di dataran tinggi terdekat</li><li>Kenali <strong>rambu hijau evakuasi tsunami</strong> di sekitar tempat tinggal</li><li>Ikuti simulasi evakuasi BPBD (tiap Oktober)</li><li>Download <strong>InaWARE &amp; InfoBMKG</strong> — notifikasi gempa &amp; tsunami real-time</li><li>Ajari anak: gempa kuat di pantai = <strong>lari ke tempat tinggi</strong></li></ul>
+<div class="chips"><span class="chip" onclick="ask('tas')">Tas siaga</span><span class="chip" onclick="ask('nomor')">Nomor darurat</span></div>`,
+
+p3k: `<h4>🩹 Pertolongan Pertama Dasar</h4>
+<h4>🩸 Luka &amp; Perdarahan:</h4>
+<ol><li>Tekan luka dengan kain bersih — jangan dilepas</li><li>Angkat bagian yang luka lebih tinggi dari jantung</li><li>Perdarahan tidak berhenti &gt;10 menit → segera ke RS/Puskesmas</li></ol>
+<h4>🦴 Dugaan Patah Tulang:</h4>
+<ul><li><strong>Jangan dipaksa digerakkan</strong></li><li>Imobilisasi dengan bidai (kayu/papan) dan kain</li><li>Segera bawa ke fasilitas kesehatan</li></ul>
+<h4>😮 Tidak Sadarkan Diri:</h4>
+<ol><li>Pastikan lingkungan aman</li><li>Panggil namanya &amp; tepuk bahu</li><li>Tidak respons → hubungi <strong>119</strong></li><li>Tidak bernapas → lakukan CPR (30 kompresi : 2 napas)</li></ol>
+<div class="alert-card info">📞 Ambulans: <strong>119</strong> · PMI: <strong>021-7992325</strong></div>
+<div class="chips"><span class="chip" onclick="ask('p3k-bakar')">P3K luka bakar</span><span class="chip" onclick="ask('p3k-tersedak')">P3K tersedak</span></div>`,
+
+"p3k-bakar": `<h4>🔥 P3K Luka Bakar</h4>
+<ol><li><strong>Dinginkan</strong> dengan air mengalir dingin (bukan es) selama <strong>10–20 menit</strong></li><li>Lepaskan pakaian &amp; perhiasan di sekitar luka (jika tidak menempel)</li><li>Tutup dengan kain bersih / perban steril tidak berbulu</li><li>Minum air yang cukup</li></ol>
+<div class="alert-card danger">🚫 <strong>JANGAN:</strong> oleskan pasta gigi, mentega, kecap, atau es batu — memperparah luka!</div>
+<h4>Kapan harus ke RS:</h4>
+<ul><li>Luka &gt; ukuran telapak tangan</li><li>Luka di wajah, tangan, kaki, alat kelamin</li><li>Kulit gosong / hitam / putih (derajat 3)</li><li>Korban anak-anak atau lansia</li></ul>
+<div class="chips"><span class="chip" onclick="ask('p3k')">P3K lainnya</span></div>`,
+
+"p3k-tersedak": `<h4>😮 P3K Tersedak — Heimlich Maneuver</h4>
+<h4>Dewasa &amp; anak &gt;1 tahun:</h4>
+<ol><li>Tanya: "Apakah kamu tersedak?" — jika tidak bisa bicara/batuk, lanjutkan</li><li>Berdiri di belakang korban, satu kaki di depan</li><li>Lingkarkan tangan ke perut korban</li><li>Kepalkan satu tangan di antara pusar dan tulang dada</li><li>Genggam kepalan dengan tangan lain</li><li><strong>Hentak ke dalam dan ke atas</strong> dengan cepat — ulangi sampai benda keluar</li></ol>
+<h4>Bayi &lt;1 tahun:</h4>
+<ul><li>5x tepukan punggung + 5x tekan dada — bergantian</li></ul>
+<div class="alert-card info">📞 Tidak berhasil: <strong>119</strong> (Ambulans)</div>
+<div class="chips"><span class="chip" onclick="ask('p3k')">P3K lainnya</span></div>`,
+
+nomor: `<h4>📞 Nomor Darurat Penting Indonesia</h4>
+<table class="emg-tbl">
+<tr style="background:var(--brand-light);"><td style="font-weight:700;border-radius:6px 0 0 0;">Layanan</td><td style="font-weight:700;">Nomor</td></tr>
+<tr><td>🆘 BNPB (Bencana Nasional)</td><td style="font-weight:800;color:var(--brand);font-size:16px;">117</td></tr>
+<tr><td>🚁 Basarnas (SAR)</td><td style="font-weight:800;color:var(--brand);font-size:16px;">115</td></tr>
+<tr><td>🚑 Ambulans / Gawat Darurat</td><td style="font-weight:800;color:var(--brand);font-size:16px;">119</td></tr>
+<tr><td>🔥 Pemadam Kebakaran</td><td style="font-weight:800;color:var(--brand);font-size:16px;">113</td></tr>
+<tr><td>👮 Polisi</td><td style="font-weight:800;color:var(--brand);font-size:16px;">110</td></tr>
+<tr><td>❤️ PMI (Palang Merah)</td><td style="font-weight:700;">021-7992325</td></tr>
+<tr><td>🌦️ BMKG (Cuaca/Gempa)</td><td style="font-weight:700;">021-6546318</td></tr>
+<tr><td>⚡ PLN (Listrik)</td><td style="font-weight:700;">123</td></tr>
+</table>
+<div class="alert-card info" style="margin-top:10px;">📱 App gratis: <strong>InfoBMKG</strong>, <strong>InaWARE</strong> — peringatan dini bencana real-time</div>
+<div class="chips"><span class="chip" onclick="ask('tas')">Tas siaga</span><span class="chip" onclick="ask('banjir')">Panduan banjir</span><span class="chip" onclick="ask('gempa')">Panduan gempa</span></div>`,
+
+tas: `<h4>🎒 Isi Tas Siaga Bencana (Go-Bag)</h4>
+<p style="font-size:13px;color:var(--text2);margin-bottom:8px;">Siapkan di tempat mudah dijangkau — bisa dibawa dalam 60 detik!</p>
+<h4>📄 Dokumen (dalam plastik kedap air):</h4>
+<ul><li>KTP, KK, Akta lahir, Ijazah terakhir</li><li>Buku tabungan &amp; kartu ATM</li><li>Kartu BPJS / asuransi kesehatan</li><li>Uang tunai secukupnya</li></ul>
+<h4>🏥 Kesehatan &amp; Keselamatan:</h4>
+<ul><li>Obat-obatan pribadi (untuk 7 hari)</li><li>Kotak P3K (perban, plester, antiseptik, parasetamol)</li><li>Masker N95 &amp; sarung tangan karet</li></ul>
+<h4>🔦 Perlengkapan Darurat:</h4>
+<ul><li>Senter + baterai cadangan / senter kepala</li><li>Powerbank terisi penuh</li><li>Peluit darurat</li><li>Poncho / jas hujan lipat</li></ul>
+<h4>🍱 Makanan &amp; Air:</h4>
+<ul><li>Air minum 3 liter (minimal)</li><li>Makanan siap makan: biskuit, kornet, snack bar (3 hari)</li></ul>
+<div class="alert-card safe">✅ <strong>Tips:</strong> Ganti makanan &amp; cek obat setiap <strong>6 bulan</strong>. Simpan tas dekat pintu keluar.</div>
+<div class="chips"><span class="chip" onclick="ask('nomor')">Nomor darurat</span><span class="chip" onclick="ask('banjir-siap')">Persiapan banjir</span><span class="chip" onclick="ask('gempa-siap')">Persiapan gempa</span></div>`
+};
+
+// ── NLP MATCHER ────────────────────────────────────────────
+const INTENTS = [
+  {keys:['banjir','flood','banjir darurat','air naik','kebanjiran'],id:'banjir'},
+  {keys:['gempa','earthquake','guncangan','lindu'],id:'gempa'},
+  {keys:['longsor','tanah longsor','lereng','bukit ambles'],id:'longsor'},
+  {keys:['kebakaran','api','terbakar','asap kebakaran'],id:'kebakaran'},
+  {keys:['tsunami','ombak besar','gelombang laut'],id:'tsunami'},
+  {keys:['apar','pemadam api ringan','racun api'],id:'apar'},
+  {keys:['luka bakar','kulit melepuh','terbakar kulit'],id:'p3k-bakar'},
+  {keys:['tersedak','heimlich'],id:'p3k-tersedak'},
+  {keys:['p3k','pertolongan pertama','first aid','luka','perdarahan','pingsan','tidak sadar','cpr'],id:'p3k'},
+  {keys:['nomor darurat','telepon darurat','kontak darurat','hotline','call center bencana'],id:'nomor'},
+  {keys:['tas siaga','go bag','perlengkapan darurat','persiapan bencana','bekal darurat'],id:'tas'},
+  {keys:['evakuasi banjir','rute banjir'],id:'banjir-evakuasi'},
+  {keys:['setelah banjir','pasca banjir','banjir surut'],id:'banjir-pasca'},
+  {keys:['persiapan banjir','antisipasi banjir'],id:'banjir-siap'},
+  {keys:['persiapan gempa','antisipasi gempa','gempa siap'],id:'gempa-siap'},
+  {keys:['rawan longsor','zona longsor'],id:'longsor-siap'},
+  {keys:['persiapan tsunami','zona tsunami'],id:'tsunami-siap'},
+];
+
+const MODE_BIAS = {banjir:'banjir',gempa:'gempa',longsor:'longsor',kebakaran:'kebakaran',tsunami:'tsunami',umum:null};
+let mode = 'umum', busy = false;
+
+function setMode(m){
+  mode = m;
+  document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pill-'+m).classList.add('active');
+  const labels={banjir:'Banjir',gempa:'Gempa',longsor:'Longsor',kebakaran:'Kebakaran',tsunami:'Tsunami',umum:'Semua Bencana'};
+  bot(`⚡ Mode <strong>${labels[m]}</strong> aktif. Tanyakan apapun tentang ${labels[m]}!`);
+}
+
+function matchIntent(txt){
+  const t = txt.toLowerCase();
+  const bias = MODE_BIAS[mode];
+  if(bias && t.length<30 && /apa|bagaimana|gimana|darurat|tolong|help|bahaya/.test(t)) return bias;
+  for(const i of INTENTS) for(const k of i.keys) if(t.includes(k)) return i.id;
+  return null;
+}
+
+function getFallback(){
+  return `Maaf, saya belum mengenali pertanyaan itu. Coba tanya salah satu topik ini:
+<div class="chips" style="margin-top:10px;">
+<span class="chip" onclick="ask('banjir')">🌊 Banjir</span>
+<span class="chip" onclick="ask('gempa')">🏔️ Gempa</span>
+<span class="chip" onclick="ask('longsor')">⛰️ Longsor</span>
+<span class="chip" onclick="ask('kebakaran')">🔥 Kebakaran</span>
+<span class="chip" onclick="ask('tsunami')">🌏 Tsunami</span>
+<span class="chip" onclick="ask('p3k')">🩹 P3K</span>
+<span class="chip" onclick="ask('nomor')">📞 Nomor Darurat</span>
+<span class="chip" onclick="ask('tas')">🎒 Tas Siaga</span>
+</div>`;
+}
+
+// ── UI HELPERS ─────────────────────────────────────────────
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function scroll(){const w=document.getElementById('chatWrap');w.scrollTop=w.scrollHeight;}
+
+function addUser(txt){
+  const w=document.getElementById('chatWrap');
+  const d=document.createElement('div');d.className='msg user';
+  d.innerHTML=`<div class="avatar user-av">👤</div><div class="bubble user">${txt.replace(/</g,'&lt;')}</div>`;
+  w.appendChild(d);scroll();
+}
+
+function bot(html){
+  const w=document.getElementById('chatWrap');
+  const d=document.createElement('div');d.className='msg';
+  d.innerHTML=`<div class="avatar bot">🛡️</div><div class="bubble bot">${html}</div>`;
+  w.appendChild(d);scroll();
+}
+
+function showDots(){
+  const w=document.getElementById('chatWrap');
+  const d=document.createElement('div');d.className='msg';d.id='dots';
+  d.innerHTML=`<div class="avatar bot">🛡️</div><div class="bubble bot"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  w.appendChild(d);scroll();
+}
+function removeDots(){const t=document.getElementById('dots');if(t)t.remove();}
+
+// ── MAIN ──────────────────────────────────────────────────
+function ask(id){
+  if(busy)return;
+  const entry=KB[id];if(!entry)return;
+  busy=true;showDots();
+  setTimeout(()=>{removeDots();bot(entry);busy=false;},500+Math.random()*400);
+}
+
+function send(){
+  if(busy)return;
+  const input=document.getElementById('userInput');
+  const txt=input.value.trim();if(!txt)return;
+  input.value='';input.style.height='auto';
+  addUser(txt);busy=true;showDots();
+  setTimeout(()=>{
+    removeDots();
+    const id=matchIntent(txt);
+    bot(id&&KB[id]?KB[id]:getFallback());
+    busy=false;
+  },600+Math.random()*500);
+  input.focus();
+}
+</script>
+</body>
+</html>
