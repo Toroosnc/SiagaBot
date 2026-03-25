@@ -1,6 +1,6 @@
 # SiagaBot — Asisten Darurat Bencana Berbasis AI (Offline-First) 
 
-**SiagaBot** adalah aplikasi web responsif yang dirancang sebagai asisten darurat mandiri untuk memberikan panduan keselamatan cepat saat terjadi bencana alam di Indonesia. Proyek ini dikembangkan untuk **IDCamp Challenge 2026**.
+**SiagaBot** adalah aplikasi web responsif yang dirancang sebagai asisten darurat mandiri untuk memberikan panduan keselamatan cepat saat terjadi bencana alam di Indonesia.
 
 ### 🌟 Fitur Utama
 * **Protokol Resmi:** Panduan evakuasi dan keselamatan disusun berdasarkan standar **BNPB**, **Basarnas**, dan **BMKG**.
